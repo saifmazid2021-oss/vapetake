@@ -24,6 +24,7 @@ export type Offer = {
   store_name: string;
   store_logo: string | null;
   store_country: string | null;
+  store_about: string | null;
 };
 
 export type ProductDetail = ProductSummary & {
@@ -33,8 +34,20 @@ export type ProductDetail = ProductSummary & {
   offers: Offer[];
 };
 
-export async function fetchProducts(params: { q?: string; brand?: string; category?: string } = {}) {
-  const entries = Object.entries(params).filter(([, v]) => v != null) as [string, string][];
+export type Category = {
+  id: number;
+  uid: string;
+  name: string;
+  url: string;
+  product_count: number;
+};
+
+export async function fetchProducts(
+  params: { q?: string; brand?: string; category?: string; limit?: number; offset?: number } = {}
+) {
+  const entries = Object.entries(params)
+    .filter(([, v]) => v != null)
+    .map(([k, v]) => [k, String(v)]) as [string, string][];
   const search = new URLSearchParams(entries);
   const res = await fetch(`${API_BASE}/products?${search}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to load products (${res.status})`);
@@ -45,4 +58,10 @@ export async function fetchProduct(slug: string) {
   const res = await fetch(`${API_BASE}/products/${slug}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to load product (${res.status})`);
   return res.json() as Promise<ProductDetail>;
+}
+
+export async function fetchCategories() {
+  const res = await fetch(`${API_BASE}/categories`, { next: { revalidate: 3600 } });
+  if (!res.ok) throw new Error(`Failed to load categories (${res.status})`);
+  return res.json() as Promise<Category[]>;
 }

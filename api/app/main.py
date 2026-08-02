@@ -102,7 +102,7 @@ def get_product(slug: str):
     product["offers"] = query(
         """SELECT o.price, o.old_price, o.coupon_code, o.coupon_note, o.affiliate_url,
                   o.position, o.source_updated_at, s.name AS store_name, s.logo_url AS store_logo,
-                  s.country AS store_country
+                  s.country AS store_country, s.about_text AS store_about
            FROM offers o JOIN stores s ON s.id = o.store_id
            WHERE o.product_id = %s ORDER BY o.position""",
         (product["id"],),
