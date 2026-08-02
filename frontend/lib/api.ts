@@ -34,7 +34,8 @@ export type ProductDetail = ProductSummary & {
 };
 
 export async function fetchProducts(params: { q?: string; brand?: string; category?: string } = {}) {
-  const search = new URLSearchParams(params as Record<string, string>);
+  const entries = Object.entries(params).filter(([, v]) => v != null) as [string, string][];
+  const search = new URLSearchParams(entries);
   const res = await fetch(`${API_BASE}/products?${search}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to load products (${res.status})`);
   return res.json() as Promise<{ items: ProductSummary[]; total: number }>;
