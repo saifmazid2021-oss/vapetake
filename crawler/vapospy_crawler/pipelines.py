@@ -118,11 +118,23 @@ class PostgresPipeline:
 
         import psycopg2
 
+        # keepalives make a dead connection (e.g. a proxied connection that
+        # silently drops on a long crawl) surface as an error within ~30s
+        # instead of hanging indefinitely and stalling the whole crawl.
+        liveness_kwargs = dict(
+            connect_timeout=10,
+            keepalives=1,
+            keepalives_idle=10,
+            keepalives_interval=5,
+            keepalives_count=3,
+            options="-c statement_timeout=15000",  # abort any single query stuck >15s server-side
+        )
+
         database_url = os.environ.get("DATABASE_URL")
         if database_url:
-            self.conn = psycopg2.connect(database_url)
+            self.conn = psycopg2.connect(database_url, **liveness_kwargs)
         else:
-            self.conn = psycopg2.connect(**self.pg_dsn)
+            self.conn = psycopg2.connect(**self.pg_dsn, **liveness_kwargs)
         self.conn.autocommit = True
 
     def close_spider(self, spider):
