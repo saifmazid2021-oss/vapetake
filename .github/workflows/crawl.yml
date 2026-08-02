@@ -1,0 +1,29 @@
+name: Recrawl vapospy.com
+
+on:
+  schedule:
+    # 04:00 UTC daily -- adjust to taste. GitHub Actions cron can slip by a
+    # few minutes at busy times; that's fine for a daily price refresh.
+    - cron: "0 4 * * *"
+  workflow_dispatch: {}  # lets you trigger a manual run from the Actions tab
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crawler
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - run: scrapy crawl vapospy
+        env:
+          # Set this in the repo's Settings -> Secrets and variables -> Actions,
+          # pointing at your hosted Postgres (Railway/Render connection string).
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
