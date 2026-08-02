@@ -110,6 +110,10 @@ class PostgresPipeline:
         if not self.enabled:
             spider.logger.info("PostgresPipeline disabled (PG_ENABLED=0)")
             return
+        self.spider = spider
+        self._connect()
+
+    def _connect(self):
         import os
 
         import psycopg2
@@ -130,6 +134,18 @@ class PostgresPipeline:
             return item
         adapter = ItemAdapter(item)
 
+        try:
+            self._process(adapter, item)
+        except Exception:
+            # Long crawls can outlive a proxied/idle DB connection (e.g.
+            # Railway's public TCP proxy). Reconnect once and retry this
+            # single item rather than silently losing everything after
+            # the drop.
+            spider.logger.warning("DB error, reconnecting and retrying item", exc_info=True)
+            self._connect()
+            self._process(adapter, item)
+
+    def _process(self, adapter, item):
         if isinstance(item, ProductItem):
             self._upsert_product(adapter)
         elif isinstance(item, CollectionItem):
