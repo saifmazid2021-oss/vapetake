@@ -43,7 +43,10 @@ def list_products(
     limit: int = Query(24, le=100),
     offset: int = 0,
 ):
-    clauses = []
+    # Exclude products with zero retailer offers -- these are "ghost" entries
+    # (discontinued/redirected pages on the source site) with no image, price,
+    # or comparison value, so listing them is just broken-looking empty cards.
+    clauses = ["EXISTS (SELECT 1 FROM offers o WHERE o.product_id = p.id)"]
     params = []
 
     if q:
