@@ -46,7 +46,9 @@ PG_DSN = {
 PG_ENABLED = os.environ.get("VAPOSPY_PG_ENABLED", "1") == "1"
 
 LOG_LEVEL = "INFO"
-LOG_FILE = "../output/crawl.log"
+# Logs to stdout/stderr by default (visible in CI). For local runs, redirect
+# the shell command to a file yourself if you want a persistent log:
+#   scrapy crawl vapospy > ../output/crawl.log 2>&1
 
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
