@@ -22,8 +22,19 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: scrapy crawl vapospy
+      - name: Sanity check environment
+        run: |
+          which scrapy
+          scrapy version -v
+          python3 -c "import psycopg2; print('psycopg2 OK')"
+
+      - name: Run crawl (unbuffered, output forced to console)
+        run: python3 -u -m scrapy.cmdline crawl vapospy -L INFO 2>&1 | tee /tmp/crawl_output.txt
         env:
           # Set this in the repo's Settings -> Secrets and variables -> Actions,
           # pointing at your hosted Postgres (Railway/Render connection string).
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Dump full output (in case the streamed log above was truncated)
+        if: always()
+        run: cat /tmp/crawl_output.txt
