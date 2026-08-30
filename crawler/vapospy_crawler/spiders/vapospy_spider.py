@@ -62,6 +62,13 @@ class VapospySpider(scrapy.Spider):
     def start_requests(self):
         yield scrapy.Request(SITEMAP_INDEX, callback=self.parse_sitemap_index)
 
+    async def start(self):
+        # Scrapy >=2.13 replaced start_requests() with this async entry
+        # point; older versions still call start_requests() directly, so
+        # keep both and just delegate here for forward compatibility.
+        for request in self.start_requests():
+            yield request
+
     def parse_sitemap_index(self, response):
         response.selector.remove_namespaces()
         sub_sitemaps = response.xpath("//loc/text()").getall()
